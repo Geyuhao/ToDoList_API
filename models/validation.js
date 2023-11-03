@@ -22,7 +22,7 @@ const validateUpdateUser = async (req, res) => {
     const id = req.params.userId;
             
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).send({ message: 'Invalid ID', data: [] });
+        return res.status(404).send({ message: 'Invalid ID', data: [] });
     }
 
     const foundUser = await UserModel.findById(id).exec();
@@ -44,7 +44,7 @@ const findUser = async (req, res) => {
     const id = req.params.userId;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        return { status: 'error', data: res.status(400).send({ message: 'Invalid ID', data: [] }) };
+        return { status: 'error', data: res.status(404).send({ message: 'Invalid User ID', data: [] }) };
     }
 
     const foundUser = await UserModel.findById(id).exec();
@@ -71,7 +71,7 @@ const validateUpdateTask = async (req, res) => {
     const id = req.params.taskId;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).send({ message: 'Invalid Task ID', data: [] });
+        return res.status(404).send({ message: 'Invalid Task ID', data: [] });
     }
 
     const foundTask = await TaskModel.findById(id).exec();
@@ -94,7 +94,7 @@ const findTask = async (req, res) => {
     const id = req.params.taskId;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        return { status: 'error', data: res.status(400).send({ message: 'Invalid Task ID', data: [] }) };
+        return { status: 'error', data: res.status(404).send({ message: 'Invalid Task ID', data: [] }) };
     }
 
     const foundTask = await TaskModel.findById(id).exec();

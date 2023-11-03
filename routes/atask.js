@@ -1,6 +1,6 @@
 const TaskModel = require('../models/task.js');
 const UserModel = require('../models/user.js');
-const { validateUpdateTask, findTask }  = require('../models/validation.js');
+const { validateUpdateTask, findTask, findUser }  = require('../models/validation.js');
 
 const sendServerError = (response, err) => {
     return response.status(500).send({ message: 'Server Error', data: [] });
@@ -39,22 +39,37 @@ module.exports = function(taskRouter) {
             const validationError = await validateUpdateTask(request, response);
             if (validationError) return validationError;
     
+            if (request.body.assignedUser){
+                const result = await findUser({ params: { userId: request.body.assignedUser } }, response);
+                if(result.status === 'error'){
+                    return result.data;
+                }
+            }
+ 
             const originalTask = await TaskModel.findById(id).exec();
             const taskUpdate = await TaskModel.findByIdAndUpdate(id, request.body, { new: true }).exec();
     
             // Check if assignedUser has changed
-            if (originalTask.assignedUsername !== taskUpdate.assignedUsername) {
+            if (originalTask.assignedUser !== taskUpdate.assignedUser) {
+
                 // Remove task from original user's tasklist
-                await UserModel.updateOne(
-                    { username: originalTask.assignedUsername },
+                await UserModel.findByIdAndUpdate(
+                    originalTask.assignedUser,
                     { $pull: { pendingTasks: originalTask._id } }
-                );
+                ).exec();
+    
+                // Fetch the new user's details
+                const newUser = await UserModel.findById(taskUpdate.assignedUser).exec();
                 
                 // Add task to new user's tasklist
-                await UserModel.updateOne(
-                    { username: taskUpdate.assignedUsername },
+                await UserModel.findByIdAndUpdate(
+                    taskUpdate.assignedUser,
                     { $addToSet: { pendingTasks: taskUpdate._id } }
-                );
+                ).exec();
+    
+                // Update task's assignedUserName based on the new user's name
+                taskUpdate.assignedUserName = newUser.name;
+                await taskUpdate.save();
             }
     
             updateTask(response, taskUpdate);
@@ -64,6 +79,7 @@ module.exports = function(taskRouter) {
         }
     });
     
+    
 
     singleTaskRoute.delete(async (request, response) => {
         try {
@@ -72,12 +88,16 @@ module.exports = function(taskRouter) {
                 return result.data;
             } else {
                 foundTask = result.data;
-
-                await UserModel.updateMany(
-                    { _id: { $in: foundTask.assignedUsers } },
-                    { $pull: { pendingTasks: foundTask._id } }
-                );
-
+    
+                // If the task is assigned to a user, update the user's pendingTasks
+                if (foundTask.assignedUser) {
+                    await UserModel.findByIdAndUpdate(
+                        foundTask.assignedUser,
+                        { $pull: { pendingTasks: foundTask._id } }
+                    ).exec();
+                }
+    
+                // Delete the task
                 await foundTask.remove();
                 response.status(200).send({ message: 'Task Deleted', data: [] });
             }
@@ -86,6 +106,7 @@ module.exports = function(taskRouter) {
             sendServerError(response, err);
         }
     });
+    
 
     return taskRouter;
 };

@@ -46,7 +46,6 @@ module.exports = function (router) {
 
             task.name = req.body.name;
             task.deadline = req.body.deadline;
-    
             task.description = req.body.description || "";
             task.completed = req.body.completed || false;
     
@@ -72,7 +71,7 @@ module.exports = function (router) {
             return res.status(201).send({ message: 'Task Created', data: task });
     
         } catch (err) {
-            return res.status(500).send({ message: 'Server Error', data: [] });
+            return res.status(500).send({ message: 'Database operation failed. Please try again.', data: err.message });
         }
     });
     

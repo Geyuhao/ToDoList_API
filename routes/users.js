@@ -1,4 +1,5 @@
 var User = require('../models/user.js');
+var Task = require('../models/task.js');
 const { validateNewUser }  = require('../models/validation.js');
 
 module.exports = function (router) {
@@ -56,7 +57,7 @@ module.exports = function (router) {
             
             return res.status(201).send({ message: 'User Created', data: user });
         } catch (err) {
-            return res.status(500).send({ message: 'Server Error', data: [] });
+            return res.status(500).send({ message: 'Server Error', data: err.message });
         }
     });
     

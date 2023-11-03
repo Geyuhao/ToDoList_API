@@ -36,10 +36,9 @@ module.exports = function(userRouter) {
     singleUserRoute.put(async (request, response) => {
         try {
             const id = request.params.userId;
-    
+        
             const validationError = await validateUpdateUser(request, response);
             if (validationError) return validationError;
-    
             const originalUser = await UserModel.findById(id).exec();
             const userUpdate = await UserModel.findByIdAndUpdate(id, request.body, { new: true }).exec();
     
@@ -47,14 +46,24 @@ module.exports = function(userRouter) {
             if (JSON.stringify(originalUser.pendingTasks) !== JSON.stringify(userUpdate.pendingTasks)) {
                 // Remove user from original tasks' assignedUsers
                 await TaskModel.updateMany(
-                    { _id: { $in: originalUser.pendingTasks }},
-                    { $pull: { assignedUsers: originalUser._id }}
+                    { _id: { $in: originalUser.pendingTasks } },
+                    {
+                        $set: {
+                            assignedUser: "",
+                            assignedUserName: "unassigned"
+                        }
+                    }
                 );
     
                 // Add user to new tasks' assignedUsers
                 await TaskModel.updateMany(
                     { _id: { $in: userUpdate.pendingTasks }},
-                    { $addToSet: { assignedUsers: userUpdate._id }}
+                    { 
+                        $set: {
+                            assignedUser: userUpdate._id,
+                            assignedUserName: userUpdate.name
+                        }
+                    }
                 );
             }
     
@@ -74,10 +83,14 @@ module.exports = function(userRouter) {
             } else{
                 foundUser = result.data;
 
-                // TODO debug this
                 await TaskModel.updateMany(
                     { _id: { $in: foundUser.pendingTasks } },
-                    { $pull: { assignedUsers: foundUser._id } }
+                    {
+                        $set: {
+                            assignedUser: "",
+                            assignedUserName: "unassigned"
+                        }
+                    }
                 );
 
                 await foundUser.remove();
