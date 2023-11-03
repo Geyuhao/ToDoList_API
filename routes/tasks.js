@@ -9,22 +9,32 @@ module.exports = function (router) {
         try {
             const { where, sort, select, skip, limit, count } = req.query;
             // console.log(req.query);
-            const query = Task.find(where).sort(sort).select(select).skip(skip).limit(limit);
+            // const query = Task.find(where).sort(sort).select(select).skip(skip).limit(limit);
+            let query = Task.find(JSON.parse(where || '{}'))
+                            .sort(JSON.parse(sort || '{}'))
+                            .select(select || '')
+                            .skip(Number(skip) || 0)
+                            .limit(Number(limit) || null); 
+
             const tasks = await query.exec();
     
             if (count) {
-                return res.status(200).send({
-                    message: 'Tasks Retrieved',
+                return res.status(200).json({
+                    message: 'Total Task Count',
                     data: tasks.length
                 });
             } else {
-                return res.status(200).send({
+                const tasks = await query.exec();
+                return res.status(200).json({
                     message: 'Tasks Retrieved',
                     data: tasks
                 });
             }
         } catch (err) {
-            res.status(500).send(err);
+            return res.status(500).json({
+                message: 'Error retrieving tasks',
+                data: err.message
+            });
         }
     });
 
