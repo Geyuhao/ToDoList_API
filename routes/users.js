@@ -4,14 +4,19 @@ const { validateNewUser }  = require('../models/validation.js');
 
 module.exports = function (router) {
     var userRoute = router.route('/users');
-    
+
     userRoute.get(async (req, res) => {
         try {
             const { where, sort, select, skip, limit, count } = req.query;
             // console.log(req.query);
-            const query = User.find(where).sort(sort).select(select).skip(skip).limit(limit);
+            const query = User.find(JSON.parse(where || '{}'))
+                            .sort(JSON.parse(sort || '{}'))
+                            .select(select || '')
+                            .skip(Number(skip) || 0)
+                            .limit(Number(limit) || null);
+
             const users = await query.exec();
-    
+
             if (count) {
                 return res.status(200).send({
                     message: 'Users Retrieved',
@@ -38,7 +43,10 @@ module.exports = function (router) {
             user.name = req.body.name;
             user.email = req.body.email;
     
-            const taskPromises = (req.body.pendingTasks || []).map(id => Task.findById(id).exec());
+            // Remove duplicate task IDs
+            const uniqueTaskIds = [...new Set(req.body.pendingTasks || [])];
+            
+            const taskPromises = uniqueTaskIds.map(id => Task.findById(id).exec());
             const tasks = await Promise.all(taskPromises);
             user.pendingTasks = tasks.filter(task => task != null).map(task => task.id);
             

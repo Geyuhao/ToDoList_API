@@ -49,8 +49,8 @@ module.exports = function(taskRouter) {
             const originalTask = await TaskModel.findById(id).exec();
             const taskUpdate = await TaskModel.findByIdAndUpdate(id, request.body, { new: true }).exec();
     
-            // Check if assignedUser has changed
-            if (originalTask.assignedUser !== taskUpdate.assignedUser) {
+
+            if (originalTask.assignedUser !== taskUpdate.assignedUser || taskUpdate.completed) {
 
                 // Remove task from original user's tasklist
                 await UserModel.findByIdAndUpdate(
@@ -58,18 +58,22 @@ module.exports = function(taskRouter) {
                     { $pull: { pendingTasks: originalTask._id } }
                 ).exec();
     
-                // Fetch the new user's details
-                const newUser = await UserModel.findById(taskUpdate.assignedUser).exec();
-                
-                // Add task to new user's tasklist
-                await UserModel.findByIdAndUpdate(
-                    taskUpdate.assignedUser,
-                    { $addToSet: { pendingTasks: taskUpdate._id } }
-                ).exec();
-    
-                // Update task's assignedUserName based on the new user's name
-                taskUpdate.assignedUserName = newUser.name;
-                await taskUpdate.save();
+
+                // Check if assignedUser has changed
+                if (!taskUpdate.completed &&  originalTask.assignedUser !== taskUpdate.assignedUser) {
+                    // Fetch the new user's details
+                    const newUser = await UserModel.findById(taskUpdate.assignedUser).exec();
+                    
+                    // Add task to new user's tasklist
+                    await UserModel.findByIdAndUpdate(
+                        taskUpdate.assignedUser,
+                        { $addToSet: { pendingTasks: taskUpdate._id } }
+                    ).exec();
+        
+                    // Update task's assignedUserName based on the new user's name
+                    taskUpdate.assignedUserName = newUser.name;
+                    await taskUpdate.save();
+                }
             }
     
             updateTask(response, taskUpdate);

@@ -32,13 +32,17 @@ module.exports = function(userRouter) {
         }
     });
 
-
     singleUserRoute.put(async (request, response) => {
         try {
             const id = request.params.userId;
-        
             const validationError = await validateUpdateUser(request, response);
             if (validationError) return validationError;
+    
+            // Ensure unique task IDs in request body
+            if (request.body.pendingTasks) {
+                request.body.pendingTasks = [...new Set(request.body.pendingTasks)];
+            }
+    
             const originalUser = await UserModel.findById(id).exec();
             const userUpdate = await UserModel.findByIdAndUpdate(id, request.body, { new: true }).exec();
     
@@ -93,7 +97,7 @@ module.exports = function(userRouter) {
                     }
                 );
 
-                await foundUser.remove();
+                await foundUser.delete();
                 response.status(200).send({ message: 'User Deleted', data: [] });
             }
 

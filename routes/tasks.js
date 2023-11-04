@@ -15,7 +15,6 @@ module.exports = function (router) {
                             .select(select || '')
                             .skip(Number(skip) || 0)
                             .limit(Number(limit) || null); 
-
             const tasks = await query.exec();
     
             if (count) {
@@ -24,7 +23,7 @@ module.exports = function (router) {
                     data: tasks.length
                 });
             } else {
-                const tasks = await query.exec();
+                // const tasks = await query.exec();
                 return res.status(200).json({
                     message: 'Tasks Retrieved',
                     data: tasks
@@ -58,8 +57,7 @@ module.exports = function (router) {
                     task.assignedUser = user.id;
                     task.assignedUserName = user.name;
                     if (!task.completed) {
-                        user.pendingTasks.push(task.id);
-                        await user.save();
+                        await User.findByIdAndUpdate(user.id, { $addToSet: { pendingTasks: task.id } }).exec();
                     }
                 }
             } else {
