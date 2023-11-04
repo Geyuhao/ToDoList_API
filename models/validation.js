@@ -5,14 +5,14 @@ const mongoose = require('mongoose');
 // validate when adding a new user
 const validateNewUser = async (req, res) => {
     if (!req.body.name) {
-        return res.status(400).send({ message: 'Name Required', data: [] });
+        return res.status(404).send({ message: 'Name Required', data: [] });
     }
     if (!req.body.email) {
-        return res.status(400).send({ message: 'Email Required', data: [] });
+        return res.status(404).send({ message: 'Email Required', data: [] });
     }
     const match = await UserModel.findOne({ email: req.body.email }).exec();
     if (match != null) {
-        return res.status(400).send({ message: 'Email Duplicate', data: [] });
+        return res.status(404).send({ message: 'Email Duplicate', data: [] });
     }
     return null;
 }
@@ -31,10 +31,10 @@ const validateUpdateUser = async (req, res) => {
     }
 
     if (!req.body.name) {
-        return res.status(400).send({ message: 'Name Required', data: [] });
+        return res.status(404).send({ message: 'Name Required', data: [] });
     }
     if (!req.body.email) {
-        return res.status(400).send({ message: 'Email Required', data: [] });
+        return res.status(404).send({ message: 'Email Required', data: [] });
     }
     return null;
 }
@@ -58,10 +58,10 @@ const findUser = async (req, res) => {
 // validate when adding a new task
 const validateNewTask = async (req, res) => {
     if (!req.body.name) {
-        return res.status(400).send({ message: 'Task Name Required', data: [] });
+        return res.status(404).send({ message: 'Task Name Required', data: [] });
     }
     if (!req.body.deadline) {
-        return res.status(400).send({ message: 'Task Deadline Required', data: [] });
+        return res.status(404).send({ message: 'Task Deadline Required', data: [] });
     }
     return null;
 };
@@ -80,11 +80,11 @@ const validateUpdateTask = async (req, res) => {
     }
 
     if (!req.body.name) {
-        return res.status(400).send({ message: 'Task Name Required', data: [] });
+        return res.status(404).send({ message: 'Task Name Required', data: [] });
     }
 
     if (!req.body.deadline) {
-        return res.status(400).send({ message: 'Deadline Required', data: [] });
+        return res.status(404).send({ message: 'Deadline Required', data: [] });
     }
     return null;
 };
