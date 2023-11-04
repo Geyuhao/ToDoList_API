@@ -8,7 +8,7 @@
 4. [Rules](#rules)
 5. [Submission Details](#submission-details)
 
-## 1. Assignment
+## 1. Functionality
 
 **The Basic Goal** : Create an API for a task management / todo list.
 
@@ -117,7 +117,10 @@ Here is the Task Schema:
 `git clone https://gitlab.com/uiuc-web-programming/mp3.git mp3`, then `cd mp3`
 2. Install dependencies:
 `npm install`
-3. Start the dev server:
+3. Add MongoDB access:
+`mkdir config & cd config`
+Creat a secret.js file to store your MongoDB access link
+5. Start the dev server:
 `npm start` or 
 `nodemon --exec node server.js` to automatically restart the server on save.
 
